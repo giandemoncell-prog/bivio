@@ -4,7 +4,7 @@
 
 Confronta prezzi in tempo reale su **Amazon**, **AliExpress**, **eBay** e **Trovaprezzi** con una sola ricerca. Progetto familiare open source, fatto con Python + Gemini AI.
 
-<!-- screenshot -->
+![BIVIO — schermata principale](screenshot.png)
 
 ## Funzionalità
 
