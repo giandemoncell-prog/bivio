@@ -1,0 +1,6 @@
+backend/.env
+backend/bivio.db
+backend/__pycache__/
+backend/*.pyc
+bivio_avvio.log
+*.log

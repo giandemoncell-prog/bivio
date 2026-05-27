@@ -1,0 +1,1511 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BIVIO — Confronto Prezzi</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,700;0,9..144,900;1,9..144,400;1,9..144,700&family=Inter+Tight:wght@400;500;600&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #f4efe4;
+  --bg-grain: #ebe5d4;
+  --ink: #1a1816;
+  --ink-soft: #6a635a;
+  --line: #d4ccb8;
+  --paper: #fdfaf3;
+  --amazon: #ff9900;
+  --amazon-deep: #b86d00;
+  --aliexpress: #e62e04;
+  --aliexpress-deep: #b32503;
+  --ebay: #0064d2;
+  --ebay-deep: #004d9f;
+  --trovaprezzi: #e05700;
+  --trovaprezzi-deep: #b34400;
+  --winner: #2d6a3e;
+  --winner-bg: #dde9d8;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html, body { background: var(--bg); }
+body {
+  color: var(--ink);
+  font-family: 'Inter Tight', sans-serif;
+  font-size: 16px;
+  line-height: 1.5;
+  min-height: 100vh;
+  background-image:
+    radial-gradient(ellipse at 15% 0%, rgba(255,153,0,0.07) 0%, transparent 45%),
+    radial-gradient(ellipse at 85% 100%, rgba(230,46,4,0.06) 0%, transparent 45%);
+}
+body::before {
+  content: '';
+  position: fixed; inset: 0;
+  pointer-events: none;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.05 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  opacity: 0.7;
+  z-index: 1;
+}
+.wrap {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 28px 24px 64px;
+  position: relative;
+  z-index: 2;
+}
+
+/* HEADER */
+header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid var(--line);
+  padding-bottom: 20px;
+  margin-bottom: 44px;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+.logo-block { flex-shrink: 0; }
+.btn-shutdown {
+  background: none;
+  border: 2px solid var(--ink);
+  color: var(--ink);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  padding: 8px 14px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+  transition: background 0.15s, color 0.15s;
+}
+.btn-shutdown:hover { background: #c0392b; border-color: #c0392b; color: #fff; }
+.logo {
+  font-family: 'Fraunces', serif;
+  font-weight: 900;
+  font-size: 52px;
+  letter-spacing: -0.05em;
+  line-height: 0.85;
+}
+.logo .accent { color: var(--aliexpress); }
+.logo-sub {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  margin-top: 8px;
+}
+
+/* TABS */
+.tabs {
+  display: flex;
+  gap: 4px;
+  flex: 1;
+  justify-content: center;
+}
+.tab-btn {
+  background: transparent;
+  border: 1.5px solid var(--line);
+  padding: 9px 18px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  cursor: pointer;
+  color: var(--ink-soft);
+  transition: all 0.18s;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+.tab-btn:hover { border-color: var(--ink); color: var(--ink); }
+.tab-btn.active { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+.tab-count {
+  background: var(--aliexpress);
+  color: white;
+  font-size: 9px;
+  font-weight: 700;
+  padding: 2px 6px;
+  min-width: 18px;
+  text-align: center;
+  display: none;
+}
+.tab-count.show { display: inline-block; }
+
+.gear {
+  background: transparent;
+  border: 1.5px solid var(--ink);
+  padding: 9px 14px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.18s;
+  color: var(--ink);
+  flex-shrink: 0;
+}
+.gear:hover { background: var(--ink); color: var(--bg); }
+
+/* SETTINGS PANEL */
+.panel {
+  background: var(--paper);
+  border: 1px solid var(--ink);
+  padding: 28px;
+  margin-bottom: 32px;
+  display: none;
+}
+.panel.open { display: block; }
+.panel h3 {
+  font-family: 'Fraunces', serif;
+  font-size: 22px;
+  font-weight: 700;
+  margin-bottom: 6px;
+}
+.panel p.lede {
+  font-size: 13.5px;
+  color: var(--ink-soft);
+  margin-bottom: 22px;
+  max-width: 560px;
+}
+.field {
+  display: grid;
+  grid-template-columns: 220px 1fr;
+  gap: 18px;
+  align-items: center;
+  margin-bottom: 14px;
+}
+.field label { font-size: 13px; font-weight: 500; }
+.field label small {
+  display: block;
+  font-weight: 400;
+  font-size: 11px;
+  color: var(--ink-soft);
+  margin-top: 2px;
+}
+.field input {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 13px;
+  padding: 11px 14px;
+  border: 1px solid var(--line);
+  background: var(--bg);
+  outline: none;
+  color: var(--ink);
+}
+.field input:focus { border-color: var(--ink); }
+.panel-actions { display: flex; align-items: center; gap: 16px; margin-top: 18px; }
+.btn-primary {
+  background: var(--ink);
+  color: var(--bg);
+  border: none;
+  padding: 12px 22px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  font-weight: 700;
+  cursor: pointer;
+}
+.btn-primary:hover { background: var(--aliexpress); }
+#savedMsg { font-size: 13px; color: var(--winner); font-weight: 500; display: none; }
+
+/* TAB CONTENT */
+.tab-content { display: none; }
+.tab-content.active { display: block; animation: fadeup 0.4s ease; }
+
+/* HERO */
+.hero { margin-bottom: 40px; }
+.hero h1 {
+  font-family: 'Fraunces', serif;
+  font-size: clamp(38px, 6vw, 68px);
+  font-weight: 400;
+  font-style: italic;
+  line-height: 1;
+  letter-spacing: -0.035em;
+  margin-bottom: 18px;
+}
+.hero h1 em { font-style: normal; font-weight: 900; }
+.hero h1 .x {
+  font-style: italic;
+  font-weight: 400;
+  color: var(--aliexpress);
+  display: inline-block;
+  transform: translateY(-4px);
+  margin: 0 6px;
+}
+.hero p { font-size: 17px; color: var(--ink-soft); max-width: 560px; line-height: 1.55; }
+
+/* AUTOCOMPLETE */
+.search-wrap { position: relative; margin: 36px 0 16px; }
+.search-wrap .search { margin: 0; }
+.autocomplete-list {
+  display: none;
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0; right: 0;
+  background: var(--paper);
+  border: 2px solid var(--ink);
+  box-shadow: 5px 5px 0 var(--ink);
+  z-index: 100;
+  max-height: 260px;
+  overflow-y: auto;
+}
+.autocomplete-list.open { display: block; }
+.autocomplete-item {
+  padding: 11px 20px;
+  font-family: 'Fraunces', serif;
+  font-size: 17px;
+  font-style: italic;
+  cursor: pointer;
+  border-bottom: 1px solid var(--ink-soft);
+  color: var(--ink);
+}
+.autocomplete-item:last-child { border-bottom: none; }
+.autocomplete-item:hover, .autocomplete-item.active { background: var(--ink); color: var(--bg); }
+.autocomplete-item mark { background: transparent; font-weight: 800; color: inherit; }
+
+/* SEARCH BOX */
+.search {
+  display: flex;
+  margin: 36px 0 16px;
+  border: 2px solid var(--ink);
+  background: var(--paper);
+  box-shadow: 7px 7px 0 var(--ink);
+  transition: transform 0.15s, box-shadow 0.15s;
+}
+.search:focus-within { transform: translate(-2px,-2px); box-shadow: 9px 9px 0 var(--ink); }
+.search input {
+  flex: 1;
+  min-width: 0;
+  padding: 22px 26px;
+  font-family: 'Fraunces', serif;
+  font-size: 22px;
+  font-style: italic;
+  border: none;
+  outline: none;
+  background: transparent;
+  color: var(--ink);
+}
+.search input::placeholder { color: #b4ab98; }
+.search button {
+  background: var(--ink);
+  color: var(--bg);
+  border: none;
+  padding: 0 32px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.search button:hover { background: var(--aliexpress); }
+.search button:disabled { background: var(--ink-soft); cursor: not-allowed; }
+
+/* PLATFORM SELECTOR */
+.platform-select { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
+.platform-opt {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  cursor: pointer;
+  border: 1.5px solid var(--line);
+  padding: 6px 12px;
+  transition: all 0.15s;
+  user-select: none;
+}
+.platform-opt input[type="checkbox"] { cursor: pointer; }
+.platform-opt.amazon-opt     { border-color: var(--amazon);      color: var(--amazon-deep); }
+.platform-opt.aliexpress-opt { border-color: var(--aliexpress);  color: var(--aliexpress-deep); }
+.platform-opt.ebay-opt       { border-color: var(--ebay);        color: var(--ebay-deep); }
+.platform-opt.trovaprezzi-opt{ border-color: var(--trovaprezzi); color: var(--trovaprezzi-deep); }
+
+.affiliate-warning {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  color: var(--ink-soft);
+  letter-spacing: 0.05em;
+  margin-bottom: 32px;
+}
+.affiliate-warning.ok { color: var(--winner); }
+
+/* ERROR / LOADING */
+.error {
+  background: #fde8e0;
+  border-left: 3px solid var(--aliexpress);
+  padding: 14px 20px;
+  color: var(--aliexpress-deep);
+  font-size: 14px;
+  margin-top: 16px;
+  display: none;
+}
+.error.show { display: block; }
+.loading { text-align: center; padding: 64px 24px; display: none; }
+.loading.show { display: block; }
+.loading-text {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 13px;
+  color: var(--ink-soft);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+.loading-bar {
+  width: 220px;
+  height: 2px;
+  background: var(--line);
+  margin: 24px auto 0;
+  overflow: hidden;
+  position: relative;
+}
+.loading-bar::after {
+  content: '';
+  position: absolute;
+  height: 100%;
+  width: 45%;
+  background: var(--ink);
+  animation: slide 1.3s ease-in-out infinite;
+}
+@keyframes slide { 0% { left: -45%; } 100% { left: 100%; } }
+
+/* RESULTS */
+.results { display: none; }
+.results.show { display: block; animation: fadeup 0.5s ease; }
+@keyframes fadeup {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.platforms {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 22px;
+  margin-top: 28px;
+}
+
+/* PLATFORM CARD */
+.platform { background: var(--paper); border: 1px solid var(--ink); overflow: hidden; }
+.platform-head {
+  padding: 18px 22px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--ink);
+  background: var(--bg-grain);
+}
+.platform-name {
+  font-family: 'Fraunces', serif;
+  font-size: 24px;
+  font-weight: 900;
+  letter-spacing: -0.025em;
+}
+.platform.amazon      .platform-name { color: var(--amazon-deep); }
+.platform.aliexpress  .platform-name { color: var(--aliexpress-deep); }
+.platform.ebay        .platform-name { color: var(--ebay-deep); }
+.platform.trovaprezzi .platform-name { color: var(--trovaprezzi-deep); }
+.platform-meta {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+}
+
+/* PRODUCT CARD */
+.product { border-bottom: 1px solid var(--line); position: relative; transition: background 0.15s; overflow: hidden; }
+.product:last-child { border-bottom: none; }
+.product:hover { background: var(--bg-grain); }
+.product.winner { background: var(--winner-bg); }
+.product.winner:hover { background: #cce0c6; }
+
+.product-img-wrap {
+  width: 100%;
+  height: 130px;
+  background: var(--bg);
+  border-bottom: 1px solid var(--line);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+.product-img {
+  max-width: 100%;
+  max-height: 120px;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+  padding: 10px;
+}
+.product-body { padding: 16px 18px 14px; }
+.badge {
+  position: absolute;
+  top: 10px; right: 10px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  color: var(--bg);
+  background: var(--winner);
+  padding: 4px 9px;
+  z-index: 1;
+}
+.product-title { font-size: 13.5px; line-height: 1.4; margin-bottom: 10px; font-weight: 500; }
+.product-price {
+  font-family: 'Fraunces', serif;
+  font-size: 30px;
+  font-weight: 900;
+  letter-spacing: -0.025em;
+  line-height: 1;
+  margin-bottom: 6px;
+}
+.product-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  color: var(--ink-soft);
+  margin-bottom: 12px;
+}
+.product-actions { display: flex; gap: 7px; flex-wrap: wrap; align-items: center; }
+.product-link {
+  display: inline-block;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  text-decoration: none;
+  color: var(--ink);
+  padding: 7px 12px;
+  border: 1.5px solid var(--ink);
+  font-weight: 600;
+  transition: all 0.15s;
+  flex: 1;
+  text-align: center;
+}
+.product-link:hover { background: var(--ink); color: var(--bg); }
+.btn-save, .btn-alert {
+  background: transparent;
+  border: 1.5px solid var(--line);
+  padding: 7px 11px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  cursor: pointer;
+  color: var(--ink-soft);
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+.btn-save:hover  { border-color: var(--winner); color: var(--winner); background: var(--winner-bg); }
+.btn-alert:hover { border-color: var(--amazon-deep); color: var(--amazon-deep); background: #fff4e5; }
+.empty {
+  padding: 40px 22px;
+  text-align: center;
+  color: var(--ink-soft);
+  font-style: italic;
+  font-family: 'Fraunces', serif;
+}
+
+/* SUMMARY BANNER */
+.summary {
+  margin-top: 28px;
+  padding: 22px 26px;
+  background: var(--ink);
+  color: var(--bg);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+.summary-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  opacity: 0.7;
+}
+.summary-value {
+  font-family: 'Fraunces', serif;
+  font-size: 26px;
+  font-weight: 900;
+  letter-spacing: -0.02em;
+  margin-top: 2px;
+}
+
+/* HISTORY */
+.history { margin-top: 56px; border-top: 1px solid var(--line); padding-top: 22px; display: none; }
+.history.show { display: block; }
+.history-title {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  margin-bottom: 14px;
+}
+.chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.chip {
+  background: var(--paper);
+  border: 1px solid var(--line);
+  padding: 7px 14px;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.15s;
+  font-family: 'Inter Tight', sans-serif;
+}
+.chip:hover { border-color: var(--ink); background: var(--bg-grain); }
+
+/* SECTION HEADER */
+.section-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 32px;
+  padding-bottom: 16px;
+  border-top: none;
+  border-bottom: 1px solid var(--line);
+  flex-wrap: wrap;
+  gap: 16px;
+}
+.section-title {
+  font-family: 'Fraunces', serif;
+  font-size: clamp(32px, 5vw, 52px);
+  font-weight: 400;
+  font-style: italic;
+  letter-spacing: -0.03em;
+  line-height: 1;
+}
+.section-title em { font-style: normal; font-weight: 900; }
+
+.check-btn {
+  background: var(--ink);
+  color: var(--bg);
+  border: none;
+  padding: 12px 20px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.check-btn:hover { background: var(--winner); }
+.check-btn:disabled { background: var(--ink-soft); cursor: not-allowed; }
+
+.empty-state {
+  text-align: center;
+  padding: 80px 24px;
+  color: var(--ink-soft);
+  font-family: 'Fraunces', serif;
+  font-style: italic;
+  font-size: 22px;
+  line-height: 1.5;
+}
+
+/* WISHLIST GRID */
+.wishlist-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 18px;
+}
+.wishlist-card { background: var(--paper); border: 1px solid var(--ink); overflow: hidden; }
+.wishlist-card .product-img-wrap { height: 160px; }
+.wishlist-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--line);
+}
+.wishlist-date {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  color: var(--ink-soft);
+  letter-spacing: 0.08em;
+}
+.btn-remove {
+  background: transparent;
+  border: 1px solid var(--line);
+  padding: 5px 10px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  cursor: pointer;
+  color: var(--aliexpress);
+  transition: all 0.15s;
+}
+.btn-remove:hover { background: var(--aliexpress); color: white; border-color: var(--aliexpress); }
+
+/* ALERTS LIST */
+.alerts-list { display: flex; flex-direction: column; gap: 12px; }
+.alert-card {
+  background: var(--paper);
+  border: 1px solid var(--ink);
+  padding: 20px 22px;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 16px;
+  align-items: start;
+}
+.alert-card.triggered { border-color: var(--winner); background: var(--winner-bg); }
+.alert-title { font-size: 14px; font-weight: 500; margin-bottom: 10px; line-height: 1.4; }
+.alert-prices { display: flex; gap: 24px; flex-wrap: wrap; }
+.alert-price-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  margin-bottom: 2px;
+}
+.alert-price-val {
+  font-family: 'Fraunces', serif;
+  font-size: 24px;
+  font-weight: 900;
+  letter-spacing: -0.02em;
+}
+.alert-price-val.target { color: var(--winner); }
+.alert-side { display: flex; flex-direction: column; align-items: flex-end; gap: 10px; }
+.status-badge {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  padding: 5px 10px;
+  text-transform: uppercase;
+}
+.status-badge.active { background: transparent; border: 1px solid var(--ink-soft); color: var(--ink-soft); }
+.status-badge.triggered { background: var(--winner); color: white; }
+.alert-sub {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  color: var(--ink-soft);
+  letter-spacing: 0.05em;
+  margin-top: 8px;
+}
+
+/* CHECK RESULT */
+.check-result {
+  margin-bottom: 20px;
+  padding: 14px 20px;
+  background: var(--winner-bg);
+  border-left: 3px solid var(--winner);
+  color: var(--winner);
+  font-size: 14px;
+  font-weight: 500;
+  display: none;
+}
+.check-result.show { display: block; }
+
+/* MODAL */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(26,24,22,0.72);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  padding: 24px;
+}
+.modal-overlay.hidden { display: none; }
+.modal {
+  background: var(--paper);
+  border: 2px solid var(--ink);
+  max-width: 460px;
+  width: 100%;
+  padding: 32px;
+  box-shadow: 8px 8px 0 var(--ink);
+}
+.modal-title {
+  font-family: 'Fraunces', serif;
+  font-size: 28px;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+.modal-sub { font-size: 13px; color: var(--ink-soft); margin-bottom: 20px; }
+.modal-product-name {
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.4;
+  padding: 12px 16px;
+  background: var(--bg-grain);
+  border: 1px solid var(--line);
+  margin-bottom: 20px;
+}
+.modal-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+  display: block;
+}
+.modal-input {
+  width: 100%;
+  font-family: 'Fraunces', serif;
+  font-size: 32px;
+  font-weight: 900;
+  letter-spacing: -0.02em;
+  padding: 14px 18px;
+  border: 2px solid var(--ink);
+  background: var(--bg);
+  outline: none;
+  color: var(--ink);
+  margin-bottom: 24px;
+}
+.modal-input:focus { border-color: var(--aliexpress); }
+.modal-actions { display: flex; gap: 12px; }
+.modal-confirm {
+  flex: 1;
+  background: var(--ink);
+  color: var(--bg);
+  border: none;
+  padding: 14px 20px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  font-weight: 700;
+  cursor: pointer;
+}
+.modal-confirm:hover { background: var(--winner); }
+.modal-cancel {
+  background: transparent;
+  border: 1.5px solid var(--ink);
+  padding: 14px 20px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  cursor: pointer;
+  color: var(--ink);
+}
+.modal-cancel:hover { background: var(--bg-grain); }
+
+footer {
+  margin-top: 56px;
+  padding-top: 20px;
+  border-top: 1px solid var(--line);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  display: flex;
+  justify-content: space-between;
+}
+
+@media (max-width: 700px) {
+  .tabs { order: 3; width: 100%; justify-content: flex-start; }
+  .field { grid-template-columns: 1fr; }
+  .alert-card { grid-template-columns: 1fr; }
+  .alert-side { flex-direction: row; align-items: center; }
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div class="logo-block">
+      <div class="logo">BI<span class="accent">V</span>IO</div>
+      <div class="logo-sub">due strade · un prezzo migliore</div>
+    </div>
+    <nav class="tabs">
+      <button class="tab-btn active" onclick="switchTab('search')">Cerca</button>
+      <button class="tab-btn" onclick="switchTab('wishlist')">
+        Wishlist <span class="tab-count" id="wCount">0</span>
+      </button>
+      <button class="tab-btn" onclick="switchTab('alerts')">
+        Alert <span class="tab-count" id="aCount">0</span>
+      </button>
+    </nav>
+    <div style="display:flex;align-items:center;gap:10px;flex-shrink:0;">
+      <button class="gear" onclick="toggleSettings()">⚙ Impostazioni</button>
+      <button class="btn-shutdown" onclick="shutdownBivio()" title="Spegni BIVIO">⏻</button>
+    </div>
+  </header>
+
+  <div class="panel" id="settings">
+    <h3>Configurazione</h3>
+    <p class="lede">Imposta l'indirizzo del backend locale. I codici affiliato sono gestiti interamente dal server.</p>
+    <div class="field">
+      <label>Backend URL
+        <small>Server locale (default: http://localhost:8000)</small>
+      </label>
+      <input type="text" id="backendUrl" placeholder="http://localhost:8000" autocomplete="off">
+    </div>
+    <p class="lede" style="margin-top:18px;margin-bottom:0">
+      I codici affiliato (Amazon, AliExpress, eBay) sono configurati lato server nel
+      file <code>backend/.env</code> e applicati automaticamente a ogni link generato.
+    </p>
+    <div class="panel-actions">
+      <button class="btn-primary" onclick="saveSettings()">Salva</button>
+      <span id="savedMsg">✓ Salvato</span>
+    </div>
+  </div>
+
+  <!-- SEARCH TAB -->
+  <div id="tab-search" class="tab-content active">
+    <section class="hero">
+      <h1>Il <em>prezzo migliore</em><br>fra <em>4</em> marketplace.</h1>
+      <p>Una sola ricerca, Amazon · AliExpress · eBay · Trovaprezzi confrontati in tempo reale. Salva prodotti e imposta alert sui prezzi.</p>
+    </section>
+
+    <div class="search-wrap">
+      <div class="search">
+        <input type="text" id="query" placeholder="cuffie bluetooth, robot aspirapolvere, frigorifero, lavatrice…" autocomplete="off" onkeydown="acKey(event)">
+        <button onclick="search()" id="searchBtn">Cerca →</button>
+      </div>
+      <div class="autocomplete-list" id="acList"></div>
+    </div>
+
+    <div class="platform-select">
+      <label class="platform-opt amazon-opt">
+        <input type="checkbox" value="amazon" checked> Amazon.it
+      </label>
+      <label class="platform-opt aliexpress-opt">
+        <input type="checkbox" value="aliexpress" checked> AliExpress
+      </label>
+      <label class="platform-opt ebay-opt">
+        <input type="checkbox" value="ebay" checked> eBay.it
+      </label>
+      <label class="platform-opt trovaprezzi-opt">
+        <input type="checkbox" value="trovaprezzi" checked> Trovaprezzi
+      </label>
+    </div>
+
+    <div class="affiliate-warning ok" id="affWarning"></div>
+    <div class="error" id="error"></div>
+
+    <div class="loading" id="loading">
+      <div class="loading-text" id="loadingText">Scandagliando i marketplace…</div>
+      <div class="loading-bar"></div>
+    </div>
+
+    <div class="results" id="results">
+      <div class="platforms" id="platformsGrid"></div>
+      <div class="summary" id="summary" style="display:none">
+        <div>
+          <div class="summary-label">Conclusione</div>
+          <div class="summary-value" id="summaryValue">—</div>
+        </div>
+        <div style="text-align:right">
+          <div class="summary-label">Risparmio massimo</div>
+          <div class="summary-value" id="summarySaving">—</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="history" id="history">
+      <div class="history-title">Ricerche recenti</div>
+      <div class="chips" id="historyItems"></div>
+    </div>
+  </div>
+
+  <!-- WISHLIST TAB -->
+  <div id="tab-wishlist" class="tab-content">
+    <div class="section-head">
+      <div class="section-title">Lista <em>Desideri</em></div>
+    </div>
+    <div id="wishlistContent"><div class="empty-state">Caricamento…</div></div>
+  </div>
+
+  <!-- ALERTS TAB -->
+  <div id="tab-alerts" class="tab-content">
+    <div class="section-head">
+      <div class="section-title">Alert <em>Prezzi</em></div>
+      <button class="check-btn" id="checkBtn" onclick="checkAlerts()">Verifica ora</button>
+    </div>
+    <div class="check-result" id="checkResult"></div>
+    <div id="alertsContent"><div class="empty-state">Caricamento…</div></div>
+  </div>
+
+  <footer>
+    <span>BIVIO v2.0</span>
+    <span>Amazon PA-API · AliExpress · eBay · Trovaprezzi</span>
+  </footer>
+</div>
+
+<!-- MODAL -->
+<div class="modal-overlay hidden" id="modal">
+  <div class="modal">
+    <div class="modal-title">Alert Prezzo</div>
+    <div class="modal-sub">Ti avvisiamo quando il prezzo scende sotto il tuo obiettivo.</div>
+    <div class="modal-product-name" id="modalProductName">—</div>
+    <label class="modal-label" for="alertPrice">Prezzo target (€)</label>
+    <input type="number" class="modal-input" id="alertPrice" placeholder="29.99" step="0.01" min="0">
+    <div class="modal-actions">
+      <button class="modal-confirm" onclick="confirmAlert()">Crea Alert</button>
+      <button class="modal-cancel" onclick="closeModal()">Annulla</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── State ─────────────────────────────────────────────────────────────────────
+let API_BASE       = localStorage.getItem('bivio_api') || (location.protocol === 'file:' ? 'http://localhost:8000' : location.origin);
+let settings       = JSON.parse(localStorage.getItem('bivio_settings') || '{}');
+let searchHistory  = JSON.parse(localStorage.getItem('bivio_history')  || '[]');
+let pendingAlert   = null;
+const productCache = {};
+let _pid = 0;
+
+const PLATFORM_META = {
+  amazon:      { label: 'Amazon.it',      meta: 'PA-API ufficiale',   cls: 'amazon' },
+  aliexpress:  { label: 'AliExpress',     meta: 'Marketplace Global', cls: 'aliexpress' },
+  ebay:        { label: 'eBay.it',        meta: 'Marketplace IT',     cls: 'ebay' },
+  trovaprezzi: { label: 'Trovaprezzi.it', meta: 'Aggregatore IT',     cls: 'trovaprezzi' },
+};
+
+const loadingMessages = [
+  'Interrogando Amazon PA-API…',
+  'Controllando AliExpress…',
+  'Cercando su eBay.it…',
+  'Verificando Trovaprezzi…',
+  'Confrontando i prezzi…',
+  'Calcolando il risparmio…',
+];
+let loadingInterval;
+
+// ── Shutdown ──────────────────────────────────────────────────────────────────
+async function shutdownBivio() {
+  if (!confirm('Spegnere BIVIO? Backend e tunnel verranno fermati.')) return;
+  try { await fetch(API_BASE + '/api/shutdown', { method: 'POST' }); } catch (_) {}
+  window.close();
+}
+
+// ── Autocomplete ──────────────────────────────────────────────────────────────
+const AC_ITEMS = [
+  'cuffie bluetooth','cuffie wireless','auricolari bluetooth','cuffie noise cancelling',
+  'robot aspirapolvere','aspirapolvere senza filo','scopa elettrica',
+  'frigorifero','frigorifero combinato','mini frigo',
+  'lavatrice','lavatrice 7kg','lavatrice 9kg','asciugatrice','lavasciuga',
+  'lavastoviglie','lavastoviglie da incasso',
+  'televisore 4K','smart TV 55 pollici','smart TV 65 pollici','proiettore',
+  'smartphone','iPhone','Samsung Galaxy','tablet Android','iPad',
+  'laptop','notebook','MacBook','PC gaming','ultrabook',
+  'tastiera wireless','mouse wireless','monitor 27 pollici','webcam',
+  'stampante','stampante laser','stampante 3D','scanner',
+  'coffee machine','macchina del caffè','macchina capsule Nespresso','moka elettrica',
+  'friggitrice ad aria','microonde','forno elettrico','piano cottura a induzione',
+  'trapano','avvitatore a batteria','smerigliatrice','saldatore',
+  'tosaerba','soffiatore foglie','decespugliatore',
+  'bici elettrica','monopattino elettrico',
+  'fotocamera mirrorless','action camera','drone',
+  'altoparlante bluetooth','soundbar','amplificatore',
+  'power bank','caricatore rapido','cavo USB-C',
+  'memoria SSD','hard disk esterno','chiavetta USB','router WiFi',
+  'materasso','cuscino memory foam','coperta elettrica',
+  'ferro da stiro','ferro da stiro verticale',
+  'orologio smartwatch','fitness tracker',
+  'giocattoli LEGO','console PlayStation','Nintendo Switch','controller Xbox',
+];
+
+let acIndex = -1;
+
+function acOpen() {
+  const q = document.getElementById('query').value.trim().toLowerCase();
+  const list = document.getElementById('acList');
+  if (q.length < 2) { acClose(); return; }
+  const matches = AC_ITEMS.filter(s => s.includes(q)).slice(0, 8);
+  if (!matches.length) { acClose(); return; }
+  acIndex = -1;
+  list.innerHTML = matches.map((s, i) => {
+    const hi = s.replace(new RegExp(`(${q.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')})`, 'gi'), '<mark>$1</mark>');
+    return `<div class="autocomplete-item" data-i="${i}" onmousedown="acPick('${s.replace(/'/,"\\'")}')">` + hi + '</div>';
+  }).join('');
+  list.classList.add('open');
+}
+
+function acClose() {
+  document.getElementById('acList').classList.remove('open');
+  acIndex = -1;
+}
+
+function acPick(val) {
+  document.getElementById('query').value = val;
+  acClose();
+  search();
+}
+
+function acKey(e) {
+  const list = document.getElementById('acList');
+  const items = list.querySelectorAll('.autocomplete-item');
+  if (e.key === 'ArrowDown') {
+    e.preventDefault();
+    acIndex = Math.min(acIndex + 1, items.length - 1);
+    items.forEach((el, i) => el.classList.toggle('active', i === acIndex));
+  } else if (e.key === 'ArrowUp') {
+    e.preventDefault();
+    acIndex = Math.max(acIndex - 1, -1);
+    items.forEach((el, i) => el.classList.toggle('active', i === acIndex));
+  } else if (e.key === 'Enter') {
+    if (acIndex >= 0 && items[acIndex]) {
+      e.preventDefault();
+      acPick(items[acIndex].textContent);
+    } else {
+      acClose();
+      search();
+    }
+  } else if (e.key === 'Escape') {
+    acClose();
+  } else {
+    setTimeout(acOpen, 0);
+  }
+}
+
+document.addEventListener('click', e => {
+  if (!e.target.closest('.search-wrap')) acClose();
+});
+
+// ── Init ──────────────────────────────────────────────────────────────────────
+function init() {
+  document.getElementById('backendUrl').value = API_BASE;
+  updateAffWarning();
+  renderHistory();
+  refreshCounts();
+}
+
+// ── Settings ──────────────────────────────────────────────────────────────────
+function toggleSettings() {
+  document.getElementById('settings').classList.toggle('open');
+}
+
+function saveSettings() {
+  API_BASE = document.getElementById('backendUrl').value.trim() || 'http://localhost:8000';
+  localStorage.setItem('bivio_api', API_BASE);
+  const msg = document.getElementById('savedMsg');
+  msg.style.display = 'inline';
+  setTimeout(() => msg.style.display = 'none', 2500);
+}
+
+function updateAffWarning() {}
+
+// ── Tabs ──────────────────────────────────────────────────────────────────────
+const TAB_ORDER = ['search', 'wishlist', 'alerts'];
+
+function switchTab(tab) {
+  document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+  document.getElementById('tab-' + tab).classList.add('active');
+  document.querySelectorAll('.tab-btn')[TAB_ORDER.indexOf(tab)].classList.add('active');
+  if (tab === 'wishlist') loadWishlist();
+  if (tab === 'alerts')   loadAlerts();
+}
+
+// ── Search ────────────────────────────────────────────────────────────────────
+function getSelectedPlatforms() {
+  return [...document.querySelectorAll('.platform-opt input:checked')].map(el => el.value);
+}
+
+async function search() {
+  const query = document.getElementById('query').value.trim();
+  if (!query) return;
+  const platforms = getSelectedPlatforms();
+  if (!platforms.length) { showError('Seleziona almeno una piattaforma.'); return; }
+
+  document.getElementById('searchBtn').disabled = true;
+  hideError();
+  document.getElementById('results').classList.remove('show');
+  document.getElementById('summary').style.display = 'none';
+  document.getElementById('loading').classList.add('show');
+
+  let msgIdx = 0;
+  document.getElementById('loadingText').textContent = loadingMessages[0];
+  loadingInterval = setInterval(() => {
+    msgIdx = (msgIdx + 1) % loadingMessages.length;
+    document.getElementById('loadingText').textContent = loadingMessages[msgIdx];
+  }, 2000);
+
+  try {
+    const res = await fetch(API_BASE + '/api/search', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ query, platforms }),
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.detail || 'Errore HTTP ' + res.status);
+    }
+    const data = await res.json();
+    renderResults(data, platforms);
+    if (data.errors && Object.keys(data.errors).length) {
+      const failed = [...new Set(Object.keys(data.errors)
+        .map(p => PLATFORM_META[p]?.label || p))];
+      showError('Ricerca non riuscita per: ' + failed.join(', ') +
+                '. Servizio momentaneamente non disponibile, riprova tra poco.');
+    }
+    addToHistory(query);
+  } catch (err) {
+    showError(err.message || 'Errore durante la ricerca. Verifica che il backend sia attivo su ' + API_BASE);
+  } finally {
+    clearInterval(loadingInterval);
+    document.getElementById('loading').classList.remove('show');
+    document.getElementById('searchBtn').disabled = false;
+  }
+}
+
+function renderResults(data, platforms) {
+  const grid = document.getElementById('platformsGrid');
+  grid.innerHTML = '';
+
+  const all = platforms.flatMap(p =>
+    (data[p] || [])
+      .filter(item => typeof item.price === 'number' && item.price > 0)
+      .map(item => ({ ...item, platform: p }))
+  );
+  const cheapest = all.length ? all.reduce((a, b) => a.price < b.price ? a : b) : null;
+
+  platforms.forEach(p => {
+    const meta = PLATFORM_META[p];
+    if (!meta) return;
+    const col = document.createElement('div');
+    col.className = 'platform ' + meta.cls;
+    col.innerHTML = `
+      <div class="platform-head">
+        <div class="platform-name">${meta.label}</div>
+        <div class="platform-meta">${meta.meta}</div>
+      </div>
+      <div>${renderPlatformItems(data[p], p, cheapest)}</div>`;
+    grid.appendChild(col);
+  });
+
+  if (cheapest) {
+    const allMins = platforms
+      .map(p => {
+        const items = (data[p] || []).filter(i => typeof i.price === 'number' && i.price > 0);
+        return items.length ? items.reduce((a, b) => a.price < b.price ? a : b) : null;
+      })
+      .filter(Boolean);
+
+    if (allMins.length >= 2) {
+      allMins.sort((a, b) => a.price - b.price);
+      const diff = allMins[allMins.length - 1].price - allMins[0].price;
+      const pct  = (diff / allMins[allMins.length - 1].price * 100).toFixed(0);
+      document.getElementById('summaryValue').textContent =
+        (PLATFORM_META[cheapest.platform]?.label || cheapest.platform) + ' è più conveniente';
+      document.getElementById('summarySaving').textContent = '€' + diff.toFixed(2) + ' · ' + pct + '%';
+      document.getElementById('summary').style.display = 'flex';
+    }
+  }
+
+  document.getElementById('results').classList.add('show');
+}
+
+function renderPlatformItems(items, platform, cheapest) {
+  if (!items || !items.length) return '<div class="empty">Nessun risultato trovato.</div>';
+  return items.map(p => {
+    const isWinner = cheapest && cheapest.platform === platform && cheapest.url === p.url;
+    const url  = addAffiliateTag(p.url);
+    const price = typeof p.price === 'number' ? p.price.toFixed(2).replace('.', ',') : p.price;
+
+    const pid = ++_pid;
+    productCache[pid] = {
+      title: p.title || '', price: p.price || 0, url: p.url || '',
+      image: p.image || '', platform, shipping: p.shipping || '', rating: p.rating || '',
+    };
+
+    const imgHtml = p.image ? `
+      <div class="product-img-wrap">
+        <img class="product-img" src="${escapeHtml(p.image)}" alt="" loading="lazy"
+             onerror="this.closest('.product-img-wrap').style.display='none'">
+      </div>` : '';
+
+    return `
+      <div class="product ${isWinner ? 'winner' : ''}">
+        ${imgHtml}
+        ${isWinner ? '<div class="badge">MIGLIOR PREZZO</div>' : ''}
+        <div class="product-body">
+          <div class="product-title">${escapeHtml(p.title || 'Senza titolo')}</div>
+          <div class="product-price">€${price}</div>
+          <div class="product-meta">
+            ${p.shipping ? `<span>📦 ${escapeHtml(p.shipping)}</span>` : ''}
+            ${p.rating   ? `<span>★ ${escapeHtml(String(p.rating))}</span>` : ''}
+          </div>
+          <div class="product-actions">
+            <a href="${url}" target="_blank" rel="noopener" class="product-link">Vedi →</a>
+            <button class="btn-save"  onclick="saveProduct(${pid}, this)">♥ Salva</button>
+            <button class="btn-alert" onclick="openAlertModal(${pid})">⏰ Alert</button>
+          </div>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+// ── Affiliate ─────────────────────────────────────────────────────────────────
+// Tracking IDs are embedded server-side in main.py (_affiliate_url).
+function addAffiliateTag(url) {
+  return url || '#';
+}
+
+// ── History ───────────────────────────────────────────────────────────────────
+function addToHistory(query) {
+  if (!searchHistory.includes(query)) {
+    searchHistory.unshift(query);
+    searchHistory = searchHistory.slice(0, 10);
+    localStorage.setItem('bivio_history', JSON.stringify(searchHistory));
+    renderHistory();
+  }
+}
+
+function renderHistory() {
+  if (!searchHistory.length) return;
+  document.getElementById('history').classList.add('show');
+  document.getElementById('historyItems').innerHTML = searchHistory.map(h =>
+    `<div class="chip" onclick="searchFromHistory(${JSON.stringify(h).replace(/"/g,'&quot;')})">${escapeHtml(h)}</div>`
+  ).join('');
+}
+
+function searchFromHistory(q) {
+  document.getElementById('query').value = q;
+  switchTab('search');
+  search();
+}
+
+// ── Wishlist ──────────────────────────────────────────────────────────────────
+async function saveProduct(pid, btn) {
+  const product = productCache[pid];
+  if (!product) return;
+  try {
+    const res = await fetch(API_BASE + '/api/wishlist', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(product),
+    });
+    if (!res.ok) throw new Error();
+    btn.textContent = '✓ Salvato';
+    btn.disabled = true;
+    setTimeout(() => { btn.textContent = '♥ Salva'; btn.disabled = false; }, 2000);
+    refreshCounts();
+  } catch {
+    alert('Errore nel salvataggio. Il backend è attivo?');
+  }
+}
+
+async function loadWishlist() {
+  const container = document.getElementById('wishlistContent');
+  container.innerHTML = '<div class="empty-state">Caricamento…</div>';
+  try {
+    const res = await fetch(API_BASE + '/api/wishlist');
+    if (!res.ok) throw new Error();
+    const items = await res.json();
+    updateTabCount('wCount', items.length);
+    if (!items.length) {
+      container.innerHTML = '<div class="empty-state">La lista desideri è vuota.<br>Salva un prodotto dalla ricerca.</div>';
+      return;
+    }
+    container.innerHTML = `<div class="wishlist-grid">${items.map(renderWishlistCard).join('')}</div>`;
+  } catch {
+    container.innerHTML = '<div class="empty-state">Impossibile caricare. Il backend è attivo?</div>';
+  }
+}
+
+function renderWishlistCard(item) {
+  const price = typeof item.price === 'number' ? item.price.toFixed(2).replace('.', ',') : item.price;
+  const imgHtml = item.image ? `
+    <div class="product-img-wrap">
+      <img class="product-img" src="${escapeHtml(item.image)}" alt="" loading="lazy"
+           onerror="this.closest('.product-img-wrap').style.display='none'">
+    </div>` : '';
+  const date = item.saved_at ? new Date(item.saved_at).toLocaleDateString('it-IT') : '—';
+  const url  = addAffiliateTag(item.url);
+  return `
+    <div class="wishlist-card">
+      ${imgHtml}
+      <div class="product-body">
+        <div class="product-title">${escapeHtml(item.title || 'Senza titolo')}</div>
+        <div class="product-price">€${price}</div>
+        <div class="product-meta">
+          ${item.shipping ? `<span>📦 ${escapeHtml(item.shipping)}</span>` : ''}
+          ${item.rating   ? `<span>★ ${escapeHtml(String(item.rating))}</span>` : ''}
+        </div>
+        <a href="${url}" target="_blank" rel="noopener" class="product-link">
+          Vedi su ${escapeHtml(item.platform || '')} →
+        </a>
+        <div class="wishlist-meta">
+          <span class="wishlist-date">Salvato ${date}</span>
+          <button class="btn-remove" onclick="removeWishlist(${item.id})">Rimuovi</button>
+        </div>
+      </div>
+    </div>`;
+}
+
+async function removeWishlist(id) {
+  await fetch(API_BASE + '/api/wishlist/' + id, { method: 'DELETE' });
+  loadWishlist();
+}
+
+// ── Alerts ────────────────────────────────────────────────────────────────────
+function openAlertModal(pid) {
+  pendingAlert = productCache[pid];
+  if (!pendingAlert) return;
+  document.getElementById('modalProductName').textContent = pendingAlert.title || 'Prodotto';
+  document.getElementById('alertPrice').value = pendingAlert.price
+    ? (pendingAlert.price * 0.9).toFixed(2) : '';
+  document.getElementById('modal').classList.remove('hidden');
+  document.getElementById('alertPrice').focus();
+}
+
+function closeModal() {
+  document.getElementById('modal').classList.add('hidden');
+  pendingAlert = null;
+}
+
+async function confirmAlert() {
+  if (!pendingAlert) return;
+  const targetPrice = parseFloat(document.getElementById('alertPrice').value);
+  if (!targetPrice || targetPrice <= 0) { alert('Inserisci un prezzo valido.'); return; }
+  try {
+    const res = await fetch(API_BASE + '/api/alerts', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        title:        pendingAlert.title,
+        url:          pendingAlert.url,
+        platform:     pendingAlert.platform,
+        target_price: targetPrice,
+        last_price:   pendingAlert.price || 0,
+      }),
+    });
+    if (!res.ok) throw new Error();
+    closeModal();
+    refreshCounts();
+  } catch {
+    alert('Errore nella creazione dell\'alert. Il backend è attivo?');
+  }
+}
+
+async function loadAlerts() {
+  const container = document.getElementById('alertsContent');
+  container.innerHTML = '<div class="empty-state">Caricamento…</div>';
+  try {
+    const res = await fetch(API_BASE + '/api/alerts');
+    if (!res.ok) throw new Error();
+    const items = await res.json();
+    const active = items.filter(i => !i.triggered).length;
+    updateTabCount('aCount', active);
+    if (!items.length) {
+      container.innerHTML = '<div class="empty-state">Nessun alert attivo.<br>Clicca ⏰ su un prodotto dalla ricerca.</div>';
+      return;
+    }
+    container.innerHTML = `<div class="alerts-list">${items.map(renderAlertCard).join('')}</div>`;
+  } catch {
+    container.innerHTML = '<div class="empty-state">Impossibile caricare. Il backend è attivo?</div>';
+  }
+}
+
+function renderAlertCard(item) {
+  const targetFmt  = item.target_price ? item.target_price.toFixed(2).replace('.', ',') : '—';
+  const lastFmt    = item.last_price   ? item.last_price.toFixed(2).replace('.', ',')   : null;
+  const triggered  = !!item.triggered;
+  const checkedStr = item.checked_at
+    ? 'Verificato ' + new Date(item.checked_at).toLocaleString('it-IT')
+    : 'Mai verificato';
+  return `
+    <div class="alert-card ${triggered ? 'triggered' : ''}">
+      <div>
+        <div class="alert-title">${escapeHtml(item.title || 'Prodotto')}</div>
+        <div class="alert-prices">
+          <div>
+            <div class="alert-price-label">Target</div>
+            <div class="alert-price-val target">€${targetFmt}</div>
+          </div>
+          ${lastFmt ? `<div>
+            <div class="alert-price-label">Ultimo rilevato</div>
+            <div class="alert-price-val">€${lastFmt}</div>
+          </div>` : ''}
+        </div>
+        <div class="alert-sub" style="margin-top:10px">
+          ${escapeHtml(item.platform || '')} · ${checkedStr}
+        </div>
+      </div>
+      <div class="alert-side">
+        <span class="status-badge ${triggered ? 'triggered' : 'active'}">
+          ${triggered ? '✓ Raggiunto' : 'Attivo'}
+        </span>
+        <button class="btn-remove" onclick="removeAlert(${item.id})">Rimuovi</button>
+      </div>
+    </div>`;
+}
+
+async function removeAlert(id) {
+  await fetch(API_BASE + '/api/alerts/' + id, { method: 'DELETE' });
+  loadAlerts();
+}
+
+async function checkAlerts() {
+  const btn    = document.getElementById('checkBtn');
+  const result = document.getElementById('checkResult');
+  btn.disabled = true;
+  btn.textContent = 'Verifica in corso…';
+  result.classList.remove('show');
+  try {
+    const res = await fetch(API_BASE + '/api/alerts/check', { method: 'POST' });
+    if (!res.ok) throw new Error();
+    const data = await res.json();
+    const triggered = data.triggered?.length || 0;
+    result.textContent = triggered
+      ? `${triggered} alert raggiunto/i! Controlla i prodotti.`
+      : `Verificati ${data.checked} alert — nessun prezzo target raggiunto.`;
+    result.classList.add('show');
+    loadAlerts();
+  } catch {
+    result.textContent = 'Errore durante la verifica. Il backend è attivo?';
+    result.classList.add('show');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Verifica ora';
+  }
+}
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
+async function refreshCounts() {
+  try {
+    const [wRes, aRes] = await Promise.all([
+      fetch(API_BASE + '/api/wishlist'),
+      fetch(API_BASE + '/api/alerts'),
+    ]);
+    if (wRes.ok) updateTabCount('wCount', (await wRes.json()).length);
+    if (aRes.ok) updateTabCount('aCount', (await aRes.json()).filter(i => !i.triggered).length);
+  } catch {}
+}
+
+function updateTabCount(id, n) {
+  const el = document.getElementById(id);
+  el.textContent = n;
+  el.classList.toggle('show', n > 0);
+}
+
+function showError(msg) {
+  const e = document.getElementById('error');
+  e.textContent = '⚠ ' + msg;
+  e.classList.add('show');
+}
+
+function hideError() { document.getElementById('error').classList.remove('show'); }
+
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, c =>
+    ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c])
+  );
+}
+
+document.getElementById('modal').addEventListener('click', e => {
+  if (e.target === document.getElementById('modal')) closeModal();
+});
+
+init();
+</script>
+</body>
+</html>
