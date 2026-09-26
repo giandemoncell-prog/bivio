@@ -4,3 +4,10 @@ backend/__pycache__/
 backend/*.pyc
 bivio_avvio.log
 *.log
+
+# chiavi API in file di testo (repo PUBBLICO) - aggiunto 2026-09-26
+backend/*API*.txt
+*-API.txt
+# stato locale strumenti e file temporanei
+.omc/
+screenshot_temp.png

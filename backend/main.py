@@ -263,7 +263,7 @@ def _extract_json(text: str) -> dict:
     return json.loads(m.group())
 
 
-def _gemini_search(prompt: str, model: str = "gemini-2.0-flash") -> str:
+def _gemini_search(prompt: str, model: str = "gemini-2.5-flash") -> str:
     from google import genai as _genai
     from google.genai import types as _gtypes
 
@@ -494,7 +494,7 @@ URL: {alert['url']}
 Piattaforma: {alert['platform']}
 
 Rispondi SOLO con un oggetto JSON nel formato: {{"price": 29.99}}"""
-                text = _gemini_search(prompt, model="gemini-2.0-flash")
+                text = _gemini_search(prompt)
                 try:
                     parsed = _extract_json(text)
                     current = float(parsed["price"])
