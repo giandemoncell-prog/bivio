@@ -11,3 +11,6 @@ backend/*API*.txt
 # stato locale strumenti e file temporanei
 .omc/
 screenshot_temp.png
+
+# note interne di sviluppo (stato chiavi API): non pubblicare, repo PUBBLICO
+CLAUDE.md
