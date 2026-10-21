@@ -27,11 +27,14 @@ _AmazonConfig.__init__ = _amazon_config_no_ssl
 
 import re
 import json
+import time
+import logging
 import sqlite3
+import threading
 from urllib.parse import quote_plus
 from datetime import datetime, timezone
 from contextlib import asynccontextmanager
-from fastapi import FastAPI, HTTPException, BackgroundTasks
+from fastapi import FastAPI, HTTPException, BackgroundTasks, Request
 from fastapi.responses import FileResponse
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
@@ -58,6 +61,67 @@ GEMINI_API_KEY_2 = os.getenv("GEMINI_API_KEY_2", "")
 ALIEXPRESS_TRACKING_ID = os.getenv("ALIEXPRESS_TRACKING_ID", "")
 EBAY_CAMPAIGN_ID = os.getenv("EBAY_CAMPAIGN_ID", "")
 scheduler = BackgroundScheduler(daemon=True)
+log = logging.getLogger("bivio")
+
+# Cache delle ricerche: stessa query + stesse piattaforme entro il TTL non
+# richiama Gemini (la quota giornaliera è il collo di bottiglia principale).
+SEARCH_CACHE_TTL = int(os.getenv("SEARCH_CACHE_TTL", str(6 * 3600)))
+_search_cache: dict = {}
+_search_cache_lock = threading.Lock()
+
+
+def _cache_get(key):
+    with _search_cache_lock:
+        hit = _search_cache.get(key)
+        if hit and time.monotonic() - hit[0] < SEARCH_CACHE_TTL:
+            return hit[1]
+        _search_cache.pop(key, None)
+    return None
+
+
+def _cache_put(key, value):
+    with _search_cache_lock:
+        if len(_search_cache) > 500:
+            _search_cache.clear()
+        _search_cache[key] = (time.monotonic(), value)
+
+
+def _parse_price(value):
+    """Normalizza il prezzo restituito dal modello: 19.99, "19,99", "€ 1.299,00" → float."""
+    if isinstance(value, (int, float)):
+        return float(value) if value > 0 else None
+    if not isinstance(value, str):
+        return None
+    s = re.sub(r"[^\d.,]", "", value)
+    if not s:
+        return None
+    if "," in s and "." in s:
+        # il separatore decimale è quello più a destra
+        s = s.replace(".", "").replace(",", ".") if s.rfind(",") > s.rfind(".") else s.replace(",", "")
+    elif "," in s:
+        s = s.replace(",", ".")
+    try:
+        price = float(s)
+    except ValueError:
+        return None
+    return price if price > 0 else None
+
+
+def _clean_items(items) -> list[dict]:
+    """Tiene solo prodotti con titolo e prezzo valido, ordinati per prezzo."""
+    if not isinstance(items, list):
+        return []
+    out = []
+    for item in items:
+        if not isinstance(item, dict) or not item.get("title"):
+            continue
+        price = _parse_price(item.get("price"))
+        if price is None:
+            continue
+        item["price"] = price
+        out.append(item)
+    out.sort(key=lambda x: x["price"])
+    return out
 
 
 def _affiliate_url(platform: str, query: str) -> str:
@@ -222,8 +286,7 @@ def _search_amazon_paapi(query: str, count: int = 3) -> list[dict]:
         items.sort(key=lambda x: x["price"])
         return items[:count]
     except Exception as e:
-        import logging
-        logging.getLogger("bivio").warning("Amazon PA-API failed (%s), falling back to AI search", e)
+        log.warning("Amazon PA-API failed (%s), falling back to AI search", e)
         return _search_amazon_via_ai(query, count)
 
 
@@ -263,12 +326,18 @@ def _extract_json(text: str) -> dict:
     return json.loads(m.group())
 
 
+_gemini_clients: dict = {}
+
+
 def _gemini_search(prompt: str, model: str = "gemini-2.5-flash") -> str:
     from google import genai as _genai
     from google.genai import types as _gtypes
 
     def _call(api_key: str) -> str:
-        gclient = _genai.Client(api_key=api_key)
+        # un client per chiave, riusato tra le richieste (evita di ricreare la connessione)
+        gclient = _gemini_clients.get(api_key)
+        if gclient is None:
+            gclient = _gemini_clients[api_key] = _genai.Client(api_key=api_key)
         response = gclient.models.generate_content(
             model=model,
             contents=SYSTEM_PROMPT + "\n\n" + prompt,
@@ -370,6 +439,14 @@ async def search(req: SearchRequest):
     platforms = [p for p in req.platforms if p in PLATFORM_NAMES]
     if not platforms:
         raise HTTPException(status_code=400, detail="Nessuna piattaforma valida selezionata")
+    query = req.query.strip()
+    if not query:
+        raise HTTPException(status_code=400, detail="Query vuota")
+
+    cache_key = (query.lower(), tuple(sorted(platforms)))
+    cached = _cache_get(cache_key)
+    if cached is not None:
+        return cached
 
     loop = asyncio.get_running_loop()
     tasks = {}
@@ -378,11 +455,11 @@ async def search(req: SearchRequest):
 
     if "amazon" in platforms:
         fn = _search_amazon_paapi if paapi_available else _search_amazon_via_ai
-        tasks["amazon"] = loop.run_in_executor(None, fn, req.query)
+        tasks["amazon"] = loop.run_in_executor(None, fn, query)
 
     others = [p for p in platforms if p != "amazon"]
     if others:
-        tasks["others"] = loop.run_in_executor(None, _search_others_via_gemini, req.query, others)
+        tasks["others"] = loop.run_in_executor(None, _search_others_via_gemini, query, others)
 
     # Ogni piattaforma richiesta parte come lista vuota: il frontend distingue
     # "nessun risultato" da "errore" leggendo il campo "errors" della risposta.
@@ -391,7 +468,7 @@ async def search(req: SearchRequest):
 
     resolved = await asyncio.gather(*tasks.values(), return_exceptions=True)
     for key, val in zip(tasks.keys(), resolved):
-        if isinstance(val, Exception):
+        if isinstance(val, BaseException):
             if key == "amazon":
                 errors["amazon"] = str(val)
             else:
@@ -399,21 +476,23 @@ async def search(req: SearchRequest):
                 for p in others:
                     errors[p] = str(val)
         elif key == "amazon":
-            result["amazon"] = val
+            result["amazon"] = _clean_items(val)
         else:
             # val è un dict {piattaforma: [...]}
             for p, items in val.items():
                 if p in result:
-                    result[p] = items
+                    result[p] = _clean_items(items)
 
     # Replace AI-generated (unreliable) URLs with real affiliate search URLs
     for platform, items in result.items():
-        if isinstance(items, list):
-            for item in items:
-                item["url"] = _affiliate_url(platform, item.get("title") or req.query)
+        for item in items:
+            item["url"] = _affiliate_url(platform, item.get("title") or query)
 
     if errors:
         result["errors"] = errors
+    else:
+        # in cache solo le ricerche riuscite: un errore di quota non va ripetuto per ore
+        _cache_put(cache_key, result)
     return result
 
 
@@ -529,8 +608,13 @@ def trigger_check():
     return check_all_alerts()
 
 @app.post("/api/shutdown")
-async def shutdown(background_tasks: BackgroundTasks):
+async def shutdown(request: Request, background_tasks: BackgroundTasks):
     import subprocess, signal
+    # Solo dal PC di casa: via Cloudflare Tunnel la richiesta arriva da 127.0.0.1
+    # ma porta l'header cf-connecting-ip, quindi va rifiutata anche in quel caso.
+    client = request.client.host if request.client else ""
+    if client not in ("127.0.0.1", "::1", "localhost") or "cf-connecting-ip" in request.headers:
+        raise HTTPException(status_code=403, detail="Spegnimento consentito solo in locale")
     def _kill():
         try:
             subprocess.run(["taskkill", "/F", "/IM", "cloudflared.exe"], capture_output=True)

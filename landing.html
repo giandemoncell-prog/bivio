@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>BIVIO — Il prezzo migliore, in una sola ricerca</title>
+<meta name="description" content="BIVIO confronta Amazon, AliExpress, eBay e Trovaprezzi in tempo reale e ti avvisa quando il prezzo scende.">
+<style>
+:root {
+  --bg: #f4efe4;
+  --bg-grain: #ebe5d4;
+  --ink: #1a1816;
+  --ink-soft: #6a635a;
+  --line: #d4ccb8;
+  --paper: #fdfaf3;
+  --amazon: #ff9900;
+  --aliexpress: #e62e04;
+  --ebay: #0064d2;
+  --trovaprezzi: #e05700;
+  --winner: #2d6a3e;
+  --winner-bg: #dde9d8;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--bg); color: var(--ink); font-family: Georgia, 'Times New Roman', serif; line-height: 1.55; }
+main { max-width: 720px; margin: 0 auto; padding: 0 16px 64px; }
+header { display: flex; justify-content: space-between; align-items: center; padding: 20px 0; }
+.logo { font-weight: 700; letter-spacing: .12em; font-size: 1.25rem; }
+.lang button { background: none; border: 1px solid var(--line); color: var(--ink-soft); padding: 4px 10px; font: inherit; font-size: .8rem; cursor: pointer; }
+.lang button[aria-pressed="true"] { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+h1 { font-size: clamp(2rem, 6vw, 3.1rem); line-height: 1.12; margin: 40px 0 16px; }
+.lead { font-size: 1.15rem; color: var(--ink-soft); max-width: 560px; }
+.cta { display: inline-block; margin-top: 28px; background: var(--ink); color: var(--paper); border: 0; padding: 16px 28px; font: inherit; font-size: 1.05rem; cursor: pointer; }
+.cta:hover { background: #000; }
+.stores { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 36px; }
+.chip { padding: 5px 12px; font-size: .85rem; color: #fff; }
+.chip.amazon { background: var(--amazon); color: var(--ink); }
+.chip.aliexpress { background: var(--aliexpress); }
+.chip.ebay { background: var(--ebay); }
+.chip.trovaprezzi { background: var(--trovaprezzi); }
+.features { display: grid; gap: 16px; margin-top: 56px; }
+@media (min-width: 640px) { .features { grid-template-columns: repeat(3, 1fr); } }
+.card { background: var(--paper); border: 1px solid var(--line); padding: 20px; }
+.card h2 { font-size: 1.05rem; margin-bottom: 6px; }
+.card p { font-size: .95rem; color: var(--ink-soft); }
+.demo { margin-top: 56px; background: var(--paper); border: 1px solid var(--line); padding: 20px; }
+.demo .row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px dashed var(--line); font-size: .95rem; }
+.demo .row:last-child { border: 0; }
+.demo .win { background: var(--winner-bg); color: var(--winner); font-weight: 700; padding: 8px; margin: 0 -8px; }
+.demo small { color: var(--ink-soft); display: block; margin-bottom: 8px; }
+footer { margin-top: 56px; font-size: .8rem; color: var(--ink-soft); }
+dialog { border: 1px solid var(--ink); background: var(--paper); padding: 28px; max-width: 440px; width: calc(100% - 32px); margin: auto; }
+dialog::backdrop { background: rgba(26,24,22,.55); }
+dialog h2 { margin-bottom: 8px; }
+dialog p { color: var(--ink-soft); font-size: .95rem; }
+dialog input[type=email] { width: 100%; padding: 12px; margin-top: 16px; border: 1px solid var(--line); font: inherit; background: #fff; }
+dialog .actions { display: flex; gap: 8px; margin-top: 14px; }
+dialog .actions .cta { margin: 0; flex: 1; padding: 13px; }
+dialog .close { background: none; border: 1px solid var(--line); padding: 13px 16px; font: inherit; cursor: pointer; }
+.thanks { color: var(--winner); font-weight: 700; margin-top: 16px; }
+[hidden] { display: none !important; }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <span class="logo">BIVIO</span>
+    <div class="lang" role="group" aria-label="Language">
+      <button data-lang="it" aria-pressed="true">IT</button>
+      <button data-lang="en" aria-pressed="false">EN</button>
+      <button data-lang="es" aria-pressed="false">ES</button>
+    </div>
+  </header>
+
+  <h1 data-i18n="h1"></h1>
+  <p class="lead" data-i18n="lead"></p>
+  <button class="cta" id="cta" data-i18n="cta"></button>
+
+  <div class="stores" aria-label="Marketplace">
+    <span class="chip amazon">Amazon</span>
+    <span class="chip aliexpress">AliExpress</span>
+    <span class="chip ebay">eBay</span>
+    <span class="chip trovaprezzi">Trovaprezzi</span>
+  </div>
+
+  <section class="features">
+    <div class="card"><h2 data-i18n="f1t"></h2><p data-i18n="f1d"></p></div>
+    <div class="card"><h2 data-i18n="f2t"></h2><p data-i18n="f2d"></p></div>
+    <div class="card"><h2 data-i18n="f3t"></h2><p data-i18n="f3d"></p></div>
+  </section>
+
+  <section class="demo" aria-label="Esempio">
+    <small data-i18n="demoLabel"></small>
+    <div class="row"><span>Amazon</span><span>€ 24,90</span></div>
+    <div class="row"><span>AliExpress</span><span>€ 17,40</span></div>
+    <div class="row win"><span>eBay ✓</span><span>€ 15,95</span></div>
+    <div class="row"><span>Trovaprezzi</span><span>€ 19,00</span></div>
+  </section>
+
+  <footer data-i18n="foot"></footer>
+</main>
+
+<dialog id="dlg">
+  <form id="form" method="dialog">
+    <h2 data-i18n="dTitle"></h2>
+    <p data-i18n="dText"></p>
+    <input type="email" id="email" required autocomplete="email" data-i18n-ph="dPh">
+    <div class="actions">
+      <button type="submit" class="cta" data-i18n="dBtn"></button>
+      <button type="button" class="close" id="close" data-i18n="dClose"></button>
+    </div>
+    <p class="thanks" id="thanks" hidden data-i18n="dThanks"></p>
+  </form>
+</dialog>
+
+<script>
+// Endpoint che riceve email ed eventi (es. Formspree: https://formspree.io/f/XXXXXXXX).
+// Vuoto = niente invio, gli eventi restano solo in localStorage del visitatore.
+const ENDPOINT = 'https://formspree.io/f/xyekqbnq';
+
+const T = {
+  it: {
+    h1: 'Il prezzo migliore, in una sola ricerca.',
+    lead: 'BIVIO confronta Amazon, AliExpress, eBay e Trovaprezzi in tempo reale, ti mostra dove costa meno e ti avvisa quando il prezzo scende.',
+    cta: 'Prova BIVIO gratuitamente',
+    f1t: 'Una ricerca, quattro negozi', f1d: 'Basta aprire mille schede: i prezzi arrivano tutti insieme.',
+    f2t: 'Lista dei desideri', f2d: 'Salva i prodotti che ti interessano e ritrovali quando vuoi.',
+    f3t: 'Avvisi di prezzo', f3d: 'Imposta il prezzo che vuoi pagare: ti avvisiamo quando ci arrivi.',
+    demoLabel: 'Esempio di confronto',
+    foot: 'BIVIO è un progetto indipendente. Alcuni link possono essere link di affiliazione: per te il prezzo non cambia.',
+    dTitle: 'Accesso limitato',
+    dText: 'BIVIO è attualmente in fase di test ad accesso limitato. Inserisci la tua email per ricevere l\'invito prioritario e provarlo subito.',
+    dPh: 'la tua@email.it', dBtn: 'Voglio l\'accesso', dClose: 'Chiudi',
+    dThanks: 'Grazie! Ti scriveremo appena si apre un posto.'
+  },
+  en: {
+    h1: 'The best price, in a single search.',
+    lead: 'BIVIO compares Amazon, AliExpress, eBay and Trovaprezzi in real time, shows you where it\'s cheapest and alerts you when the price drops.',
+    cta: 'Try BIVIO for free',
+    f1t: 'One search, four stores', f1d: 'No more dozens of tabs: all prices arrive together.',
+    f2t: 'Wishlist', f2d: 'Save the products you like and find them again anytime.',
+    f3t: 'Price alerts', f3d: 'Set the price you want to pay: we\'ll tell you when it gets there.',
+    demoLabel: 'Comparison example',
+    foot: 'BIVIO is an independent project. Some links may be affiliate links: the price you pay does not change.',
+    dTitle: 'Limited access',
+    dText: 'BIVIO is currently in limited-access testing. Enter your email to get a priority invite and try it right away.',
+    dPh: 'you@email.com', dBtn: 'I want access', dClose: 'Close',
+    dThanks: 'Thanks! We\'ll write as soon as a spot opens up.'
+  },
+  es: {
+    h1: 'El mejor precio, en una sola búsqueda.',
+    lead: 'BIVIO compara Amazon, AliExpress, eBay y Trovaprezzi en tiempo real, te muestra dónde cuesta menos y te avisa cuando el precio baja.',
+    cta: 'Prueba BIVIO gratis',
+    f1t: 'Una búsqueda, cuatro tiendas', f1d: 'Basta de abrir mil pestañas: los precios llegan todos juntos.',
+    f2t: 'Lista de deseos', f2d: 'Guarda los productos que te interesan y encuéntralos cuando quieras.',
+    f3t: 'Alertas de precio', f3d: 'Fija el precio que quieres pagar: te avisamos cuando llegue.',
+    demoLabel: 'Ejemplo de comparación',
+    foot: 'BIVIO es un proyecto independiente. Algunos enlaces pueden ser de afiliación: el precio para ti no cambia.',
+    dTitle: 'Acceso limitado',
+    dText: 'BIVIO está actualmente en fase de prueba con acceso limitado. Introduce tu email para recibir la invitación prioritaria y probarlo ya.',
+    dPh: 'tu@email.es', dBtn: 'Quiero acceso', dClose: 'Cerrar',
+    dThanks: '¡Gracias! Te escribiremos en cuanto se abra un lugar.'
+  }
+};
+
+const $ = s => document.querySelector(s);
+let lang = 'it';
+
+function track(event, extra) {
+  const payload = { event, lang, ref: new URLSearchParams(location.search).get('src') || '', ts: new Date().toISOString(), ...extra };
+  try {
+    const log = JSON.parse(localStorage.getItem('bivio_events') || '[]');
+    log.push(payload);
+    localStorage.setItem('bivio_events', JSON.stringify(log));
+  } catch (e) {}
+}
+
+function render() {
+  const t = T[lang];
+  document.documentElement.lang = lang;
+  document.querySelectorAll('[data-i18n]').forEach(el => { el.textContent = t[el.dataset.i18n]; });
+  document.querySelectorAll('[data-i18n-ph]').forEach(el => { el.placeholder = t[el.dataset.i18nPh]; });
+  document.querySelectorAll('.lang button').forEach(b => b.setAttribute('aria-pressed', b.dataset.lang === lang));
+}
+
+document.querySelectorAll('.lang button').forEach(b => b.addEventListener('click', () => { lang = b.dataset.lang; render(); }));
+
+$('#cta').addEventListener('click', () => {
+  track('cta_click');
+  $('#thanks').hidden = true;
+  $('#dlg').showModal();
+});
+$('#close').addEventListener('click', () => $('#dlg').close());
+
+$('#form').addEventListener('submit', async e => {
+  e.preventDefault();
+  const email = $('#email').value.trim();
+  track('email_submit');
+  if (ENDPOINT) {
+    try {
+      await fetch(ENDPOINT, { method: 'POST', headers: { 'Content-Type': 'application/json', Accept: 'application/json' }, body: JSON.stringify({ email, lang }) });
+    } catch (err) {}
+  }
+  $('#thanks').hidden = false;
+  $('#email').value = '';
+});
+
+render();
+track('page_view');
+</script>
+</body>
+</html>
